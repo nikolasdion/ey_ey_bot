@@ -1,0 +1,1 @@
+worker: python ey_ey_bot.py
