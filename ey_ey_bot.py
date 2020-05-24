@@ -20,8 +20,10 @@ class HttpClient:
         response = requests.get(self.api_url + "getMe").json()
         if response["ok"] == True and response["result"]["is_bot"] == True:
             bot_display_name = response["result"]["first_name"]
-            bot_username = response["result"]["username"]
-            print(f"Connected with Telegram server for bot {bot_display_name} (@{bot_username}).")
+            self.bot_username = response["result"]["username"]
+            print(
+                f"Connected with Telegram server for bot {bot_display_name} (@{self.bot_username})."
+            )
         else:
             raise ValueError(
                 f"Wrong API token. Please check your environment variable."
@@ -84,36 +86,110 @@ class Message:
             print(f"Message from server doesn't have an expected attribute: {response_from_server}")
 
 
-class EyChecker:
+class Echoer:
     """
-    Checks the message against a list of words and generate a reply.
+    Checks messages against a list of words and echoes it back if match is found.
     """
 
-    def __init__(self, word_list):
-        self.word_list = word_list
+    word_list = ("ey", "ea", "gelow", "anying")
 
-    def get_reply(self, text):
+    def get_echo(self, text):
         for word in self.word_list:
-            truncated_text = text[0 : len(word)]
-            if truncated_text.lower() == word:
-                print(f"Got a match for {word}")
-                return truncated_text
+            match = get_match(text, word)
+            if match is not None:
+                return match
         return None
 
 
-# API token for bot. This is gotten from the environment variable.
-token = os.environ["BOT_TOKEN"]
+def get_match(text, word_to_match):
+    """
+    Check if the first characters match a given word.
+    """
+    truncated_text = text[0 : len(word_to_match)]
+    if truncated_text.lower() == word_to_match:
+        print(f"Got a match for {word_to_match}")
+        return truncated_text
+    else:
+        return None
 
-# List of strings which triggers 'ey' response
-ey_list = ("ey", "ea", "gelow", "anying")
 
-http_client = HttpClient(token)
-ey_checker = EyChecker(ey_list)
+class Clapbacker:
+    """
+    Checks messages against a list of words and echoes it back if match is found.
+    """
+
+    trigger = "cicing"
+    reply = "Embung"
+
+    def __init__(self, bot_username=""):
+        self.bot_username = bot_username
+
+    def get_clapback(self, text):
+        if self.should_clapback(text):
+            return self.reply
+        else:
+            return None
+
+    def should_clapback(self, text):
+        return self.is_bot_mentioned(text) and self.contain_trigger_word(text)
+
+    def contain_trigger_word(self, text):
+        return self.trigger in text
+
+    def is_bot_mentioned(self, text):
+        return self.bot_username in text
+
+
+class EyOfTheDayer:
+    """
+    Sends out an ey every day.
+    """
+
+    last_ey_day = datetime.datetime.now().day
+
+    def maybe_ey_of_the_day(self, message, http_client):
+        # Send an ey if last ey was at least a day ago
+        if self.last_ey_day != datetime.datetime.now().day:
+            print("Sending ey because the last time was at least yesterday")
+            http_client.send_message(message.chat_id, "ey")
+            self.last_ey_day = datetime.datetime.now().day
+
+
+def maybe_notify_bot_alive(message, chats_notified, http_client):
+    # If we haven't done so yet, notify the chat that the bot is back alive.
+    chat_id = message.chat_id
+    if not chat_id in chats_notified:
+        http_client.send_message(chat_id, "*BANGKIT DARI KUBUR*")
+        chats_notified.add(chat_id)
+        print(f"Notified chat {message.chat_title} ({chat_id}) that we're back alive!")
+
+
+def maybe_echo(message, echoer, http_client):
+    text = message.text
+    echo = echoer.get_echo(text)
+    if echo is not None:
+        print(f"Replying {echo} for {text}")
+        http_client.send_message(message.chat_id, echo)
+
+
+def maybe_clapback(message, clapbacker, http_client):
+    text = message.text
+    clapback = clapbacker.get_clapback(text)
+    if clapback is not None:
+        print(f"Replying {clapback} for {text}")
+        http_client.send_message(message.chat_id, clapback)
 
 
 def main():
+    # API token for bot. This is gotten from the environment variable.
+    token = os.environ["BOT_TOKEN"]
+
+    http_client = HttpClient(token)
+    echoer = Echoer()
+    clapbacker = Clapbacker(http_client.bot_username)
+    ey_of_the_dayer = EyOfTheDayer()
+
     offset = None
-    last_ey_day = datetime.datetime.now().day
 
     # Set of chats that's been notified that the bot is back alive.
     chats_notified = set()
@@ -127,25 +203,10 @@ def main():
         # bot is invited to a new group), the Message object won't have the necessary attributes for
         # the following code to execute. For now, just catch AttributeError.
         try:
-            chat_id = message.chat_id
-
-            # If we haven't done so yet, notify the chat that the bot is back alive.
-            if not chat_id in chats_notified:
-                http_client.send_message(chat_id, "*BANGKIT DARI KUBUR*")
-                chats_notified.add(chat_id)
-                print(f"Notified chat {chat_id} that we're back alive!")
-
-            # Send an ey if someone says anything that starts with ey
-            reply = ey_checker.get_reply(message.text)
-            if reply is not None:
-                print(f"Replying {message.sender} in {message.chat_title} for {reply}")
-                http_client.send_message(chat_id, reply)
-
-            # Send an ey if last ey was at least a day ago
-            if datetime.datetime.now().day != last_ey_day:
-                print("Sending ey because the last time was at least yesterday")
-                http_client.send_message(chat_id, "ey")
-                last_ey_day = datetime.datetime.now().day
+            maybe_notify_bot_alive(message, chats_notified, http_client)
+            maybe_echo(message, echoer, http_client)
+            maybe_clapback(message, clapbacker, http_client)
+            ey_of_the_dayer.maybe_ey_of_the_day(ey_of_the_dayer, http_client)
 
         except AttributeError as error:
             print(f"Message didn't have the attribute we need. Error was: {error}")
