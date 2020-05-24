@@ -32,7 +32,6 @@ class HttpClient:
         params = {"timeout": timeout, "offset": offset}
         response = requests.get(self.api_url + "getUpdates", params).json()
         if "result" in response:
-            print(f"Got update, response: {response}")
             return response["result"]
         else:
             print(f"ERROR: Response doesn't contain result. Full response: {response}")
@@ -49,7 +48,7 @@ class HttpClient:
                 self.last_update = get_result[-1]
                 got_last_update = True
             else:
-                print("Request timeout, try sending another request.")
+                print("Request timeout or no updates since last time, try sending another request.")
 
         return self.last_update
 
