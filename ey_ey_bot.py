@@ -5,31 +5,38 @@ import os
 
 class HttpClient:
     """
-    The class that handles all http requests with the Telegram server
+    Handles all http requests with the Telegram server
     """
 
     def __init__(self, token):
         print("Initialising http client...")
         self.token = token
-        self.api_url = "https://api.telegram.org/bot{}/".format(token)
+        self.api_url = f"https://api.telegram.org/bot{token}/"
         self.last_update = None
         self.verify_token()
 
     def verify_token(self):
         response = requests.get(self.api_url + "getMe").json()
         if response["ok"] == True and response["result"]["is_bot"] == True:
+            bot_display_name = response["result"]["first_name"]
+            bot_username = response["result"]["username"]
             print(
-                "Connected with Telegram server for bot {} ({}).".format(
-                    response["result"]["username"], response["result"]["first_name"]
-                )
+                f"Connected with Telegram server for bot {bot_display_name} (@{bot_username})."
             )
         else:
-            raise ValueError("Wrong API token. Please check your environment variable.")
+            raise ValueError(
+                f"Wrong API token. Please check your environment variable. Response from server: {response}"
+            )
 
     def get_updates(self, offset=None, timeout=100):
         params = {"timeout": timeout, "offset": offset}
-        response = requests.get(self.api_url + "getUpdates", params)
-        return response.json()["result"]
+        response = requests.get(self.api_url + "getUpdates", params).json()
+        if "result" in response:
+            print(f"Got update, response: {response}")
+            return response["result"]
+        else:
+            print(f"ERROR: Response doesn't contain result. Full response: {response}")
+            return {}
 
     def get_last_update(self, offset=None, timeout=100):
         print("Getting latest update...")
@@ -49,6 +56,7 @@ class HttpClient:
     def send_message(self, chat_id, text):
         params = {"chat_id": chat_id, "text": text}
         response = requests.post(self.api_url + "sendMessage", data=params)
+        print(f"Sent message, response: {response}")
 
 
 class Message:
@@ -81,7 +89,7 @@ class EyChecker:
     def get_reply(self, text):
         for word in self.word_list:
             truncated_text = text[0 : len(word)]
-            print("Checking {} against {}".format(truncated_text, word))
+            print(f"Checking {truncated_text} against {word}")
             if truncated_text.lower() == word:
                 return truncated_text
         return None
@@ -89,6 +97,7 @@ class EyChecker:
 
 # API token for bot. This is gotten from the environment variable.
 token = os.environ["EY_KEY"]
+
 # List of strings which triggers 'ey' response
 ey_list = ("ey", "ea", "gelow", "anying")
 
@@ -107,11 +116,7 @@ def main():
         # Send an ey if someone says anything that starts with ey
         reply = ey_checker.get_reply(message.text)
         if reply is not None:
-            print(
-                "Replying {} in {} for {}".format(
-                    message.sender, message.chat_title, reply
-                )
-            )
+            print(f"Replying {message.sender} in {message.chat_title} for {reply}")
             http_client.send_message(message.chat_id, reply)
 
         # Send an ey if last ey was at least a day ago
