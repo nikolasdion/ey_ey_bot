@@ -48,7 +48,9 @@ class HttpClient:
                 self.last_update = get_result[-1]
                 got_last_update = True
             else:
-                print("Request timeout or no updates since last time, try sending another request.")
+                print(
+                    "Request timeout or no updates since last time, try sending another request."
+                )
 
         return self.last_update
 
@@ -88,8 +90,8 @@ class EyChecker:
     def get_reply(self, text):
         for word in self.word_list:
             truncated_text = text[0 : len(word)]
-            print(f"Checking {truncated_text} against {word}")
             if truncated_text.lower() == word:
+                print(f"Got a match for {word}")
                 return truncated_text
         return None
 
