@@ -97,7 +97,7 @@ class EyChecker:
 
 
 # API token for bot. This is gotten from the environment variable.
-token = os.environ["EY_KEY"]
+token = os.environ["BOT_TOKEN"]
 
 # List of strings which triggers 'ey' response
 ey_list = ("ey", "ea", "gelow", "anying")
