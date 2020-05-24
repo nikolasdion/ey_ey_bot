@@ -2,10 +2,12 @@ import datetime
 import requests
 import os
 
+
 class HttpClient:
     """
     The class that handles all http requests with the Telegram server
     """
+
     def __init__(self, token):
         print("Initialising http client...")
         self.token = token
@@ -14,17 +16,20 @@ class HttpClient:
         self.verify_token()
 
     def verify_token(self):
-        response = requests.get(self.api_url + 'getMe').json()
-        if response['ok'] == True and response['result']['is_bot'] == True:
-            print("Connected with Telegram server for bot {} ({})."
-                .format(response['result']['username'], response['result']['first_name']))
+        response = requests.get(self.api_url + "getMe").json()
+        if response["ok"] == True and response["result"]["is_bot"] == True:
+            print(
+                "Connected with Telegram server for bot {} ({}).".format(
+                    response["result"]["username"], response["result"]["first_name"]
+                )
+            )
         else:
-            raise ValueError('Wrong API token. Please check your environment variable.')
+            raise ValueError("Wrong API token. Please check your environment variable.")
 
     def get_updates(self, offset=None, timeout=100):
-        params = {'timeout': timeout, 'offset' : offset}
-        response = requests.get(self.api_url + 'getUpdates', params)
-        return response.json()['result']
+        params = {"timeout": timeout, "offset": offset}
+        response = requests.get(self.api_url + "getUpdates", params)
+        return response.json()["result"]
 
     def get_last_update(self, offset=None, timeout=100):
         print("Getting latest update...")
@@ -42,38 +47,40 @@ class HttpClient:
         return self.last_update
 
     def send_message(self, chat_id, text):
-        params = {'chat_id': chat_id, 'text': text}
-        response = requests.post(self.api_url + 'sendMessage', data = params)
+        params = {"chat_id": chat_id, "text": text}
+        response = requests.post(self.api_url + "sendMessage", data=params)
 
 
 class Message:
     """
     Represents a message that was received from the Telegram server
     """
+
     def __init__(self, httpResponse):
-        self.update_id = httpResponse['update_id']
-        self.text = httpResponse['message']['text']
-        self.chat_id = httpResponse['message']['chat']['id']
-        self.sender = httpResponse['message']['from']['first_name']
-        self.chat_type = httpResponse['message']['chat']['type']
+        self.update_id = httpResponse["update_id"]
+        self.text = httpResponse["message"]["text"]
+        self.chat_id = httpResponse["message"]["chat"]["id"]
+        self.sender = httpResponse["message"]["from"]["first_name"]
+        self.chat_type = httpResponse["message"]["chat"]["type"]
         # Depending on the chat type, get the title of the chat is either the name of the person
         # or the group name.
-        if  self.chat_type == 'private':
+        if self.chat_type == "private":
             self.chat_title = self.sender
         else:
-            self.chat_title = httpResponse['message']['chat']['title']
+            self.chat_title = httpResponse["message"]["chat"]["title"]
 
 
 class EyChecker:
     """
     Class that handles the logic in checking the message against a list of words
     """
+
     def __init__(self, word_list):
         self.word_list = word_list
 
     def get_reply(self, text):
         for word in self.word_list:
-            truncated_text = text[0:len(word)]
+            truncated_text = text[0 : len(word)]
             print("Checking {} against {}".format(truncated_text, word))
             if truncated_text.lower() == word:
                 return truncated_text
@@ -100,20 +107,22 @@ def main():
         # Send an ey if someone says anything that starts with ey
         reply = ey_checker.get_reply(message.text)
         if reply is not None:
-            print("Replying {} in {} for {}".format(message.sender,
-                                                    message.chat_title,
-                                                    reply))
+            print(
+                "Replying {} in {} for {}".format(
+                    message.sender, message.chat_title, reply
+                )
+            )
             http_client.send_message(message.chat_id, reply)
 
         # Send an ey if last ey was at least a day ago
         if datetime.datetime.now().day != last_ey_day:
             print("Sending ey because the last time was at least yesterday")
-            http_client.send_message(message.chat_id, 'ey')
+            http_client.send_message(message.chat_id, "ey")
             last_ey_day = datetime.datetime.now().day
 
         # Increment offset by 1, for long polling
         offset = message.update_id + 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
