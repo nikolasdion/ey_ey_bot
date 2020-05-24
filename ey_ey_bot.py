@@ -5,7 +5,7 @@ import os
 
 class HttpClient:
     """
-    Handles all http requests with the Telegram server
+    Handles all http requests with the Telegram server.
     """
 
     def __init__(self, token):
@@ -62,7 +62,7 @@ class HttpClient:
 
 class Message:
     """
-    Represents a message that was received from the Telegram server
+    Represents a message sent in a chat with the bot in it, that this code receives from the Telegram server.
     """
 
     def __init__(self, httpResponse):

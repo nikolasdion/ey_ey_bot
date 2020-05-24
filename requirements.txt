@@ -1,1 +1,2 @@
-Requests>=2.20.0
+# latest: https://github.com/psf/requests/releases
+Requests==2.23.0
