@@ -56,12 +56,9 @@ class HttpClient:
         return self.last_update
 
     def send_message(self, chat_id, text):
-        params = {
-            "chat_id": chat_id,
-            "text": text,
-        }
+        params = {"chat_id": chat_id, "text": text, "parse_mode": "markdown"}
         response = requests.post(self.api_url + "sendMessage", data=params,)
-        print(f"Sent message, response: {response}")
+        print(f"Sent message '{text}', response: {response}")
 
 
 class Message:
@@ -84,15 +81,12 @@ class Message:
             else:
                 self.chat_title = response_from_server["message"]["chat"]["title"]
         except KeyError:
-            print(
-                f"""KeyError, message from server doesn't have the expected attribute.
-                Message that we got was: {response_from_server}"""
-            )
+            print(f"Message from server doesn't have an expected attribute: {response_from_server}")
 
 
 class EyChecker:
     """
-    Class that handles the logic in checking the message against a list of words
+    Checks the message against a list of words and generate a reply.
     """
 
     def __init__(self, word_list):
@@ -121,8 +115,11 @@ def main():
     offset = None
     last_ey_day = datetime.datetime.now().day
 
+    # Set of chats that's been notified that the bot is back alive.
+    chats_notified = set()
+
     while True:
-        # Get latest message, this will repeat itself until a non-zero return is gotten
+        # Get latest message, this will repeat itself until a non-zero return is gotten.
         message = Message(http_client.get_last_update(offset))
 
         # TODO: tidy this up!
@@ -130,17 +127,26 @@ def main():
         # bot is invited to a new group), the Message object won't have the necessary attributes for
         # the following code to execute. For now, just catch AttributeError.
         try:
+            chat_id = message.chat_id
+
+            # If we haven't done so yet, notify the chat that the bot is back alive.
+            if not chat_id in chats_notified:
+                http_client.send_message(chat_id, "*BANGKIT DARI KUBUR*")
+                chats_notified.add(chat_id)
+                print(f"Notified chat {chat_id} that we're back alive!")
+
             # Send an ey if someone says anything that starts with ey
             reply = ey_checker.get_reply(message.text)
             if reply is not None:
                 print(f"Replying {message.sender} in {message.chat_title} for {reply}")
-                http_client.send_message(message.chat_id, reply)
+                http_client.send_message(chat_id, reply)
 
             # Send an ey if last ey was at least a day ago
             if datetime.datetime.now().day != last_ey_day:
                 print("Sending ey because the last time was at least yesterday")
-                http_client.send_message(message.chat_id, "ey")
+                http_client.send_message(chat_id, "ey")
                 last_ey_day = datetime.datetime.now().day
+
         except AttributeError as error:
             print(f"Message didn't have the attribute we need. Error was: {error}")
 
