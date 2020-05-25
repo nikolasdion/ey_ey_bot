@@ -1,4 +1,4 @@
-# All classes and methods that handles constructing replies to messages.
+""" Classes and methods that handles constructing replies to messages. """
 
 import datetime
 
@@ -7,7 +7,7 @@ ECHOED_WORDS = ("ey", "ea", "gelow", "anying")
 
 # Trigger word and reply for when bot is mentioned
 CLAPBACK_TRIGGER = "cicing"
-CLAPBACK_REPLY = "Embung"
+CLAPBACK_REPLY = "embung"
 
 # Message broadcasted to chats when bot is back alive
 RESSURECTION_MESSAGE = "*BANGKIT DARI KUBUR*"
@@ -17,6 +17,8 @@ EY_OF_THE_DAY_MESSAGE = "ey"
 
 
 class Replier:
+    """ Sends replies to messages """
+
     def __init__(self, http_client):
         self._http_client = http_client
         self._echoer = Echoer()
@@ -25,16 +27,21 @@ class Replier:
         self._ressurection_messenger = RessurectionMessenger()
 
     def maybe_reply(self, message):
-        self._ressurection_messenger.maybe_send(message, self._http_client)
-        self._echoer.maybe_echo(message, self._http_client)
-        self._clapbacker.maybe_clapback(message, self._http_client)
-        self._ey_of_the_dayer.maybe_send(message, self._http_client)
+        # TODO: tidy this up!
+        # If the "message" object from server is not in the format of a normal chat message (e.g.
+        # bot is invited to a new group), the Message object won't have the necessary attributes for
+        # the following code to execute. For now, just catch AttributeError.
+        try:
+            self._ressurection_messenger.maybe_send(message, self._http_client)
+            self._echoer.maybe_echo(message, self._http_client)
+            self._clapbacker.maybe_clapback(message, self._http_client)
+            self._ey_of_the_dayer.maybe_send(message, self._http_client)
+        except AttributeError as error:
+            print(f"Message didn't have the attribute we need. Error was: {error}")
 
 
 class Echoer:
-    """
-    Checks messages against a list of words and echoes it back if match is found.
-    """
+    """ Checks messages against a list of words and echoes it back if match is found. """
 
     def maybe_echo(self, message, http_client):
         text = message.text
@@ -51,9 +58,7 @@ class Echoer:
         return None
 
     def _get_match(self, text, word_to_match):
-        """
-        Check if the first characters match a given word.
-        """
+        """ Check if the first characters match a given word. """
         truncated_text = text[0 : len(word_to_match)]
         if truncated_text.lower() == word_to_match:
             print(f"Got a match for {word_to_match}")
@@ -63,9 +68,7 @@ class Echoer:
 
 
 class Clapbacker:
-    """
-    Checks messages against a list of words and echoes it back if match is found.
-    """
+    """ Checks messages against a list of words and echoes it back if match is found. """
 
     def __init__(self, bot_username=""):
         self.bot_username = bot_username
@@ -87,9 +90,7 @@ class Clapbacker:
 
 
 class EyOfTheDayer:
-    """
-    Sends out an ey every day.
-    """
+    """ Sends out an ey every day. """
 
     _last_ey_day = datetime.datetime.now().day
 
@@ -102,9 +103,7 @@ class EyOfTheDayer:
 
 
 class RessurectionMessenger:
-    """
-    Notifies every chat that we're alive.
-    """
+    """ Notifies every chat that we're alive. """
 
     _chats_notified = set()
 
@@ -113,6 +112,4 @@ class RessurectionMessenger:
         if not chat_id in self._chats_notified:
             http_client.send_message(chat_id, RESSURECTION_MESSAGE)
             self._chats_notified.add(chat_id)
-            print(
-                f"Notified chat {message.chat_title} ({chat_id}) that we're back alive!"
-            )
+            print(f"Notified chat {message.chat_title} ({chat_id}) that we're back alive!")
