@@ -32,7 +32,9 @@ class Replier:
         # bot is invited to a new group), the Message object won't have the necessary attributes for
         # the following code to execute. For now, just catch AttributeError.
         try:
-            self._ressurection_messenger.maybe_send(message, self._http_client)
+            # Disabled for now because it's getting annoying
+            # TODO: re-enable once no longer crashing when receiving images
+            # self._ressurection_messenger.maybe_send(message, self._http_client) 
             self._echoer.maybe_echo(message, self._http_client)
             self._clapbacker.maybe_clapback(message, self._http_client)
             self._ey_of_the_dayer.maybe_send(message, self._http_client)
