@@ -42,7 +42,12 @@ class HttpClient:
             )
 
     def send_message(self, chat_id, text):
-        params = {"chat_id": chat_id, "text": text, "parse_mode": "markdown"}
+        params = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "markdown",
+            "disable_notification": True,
+        }
         response = requests.post(
             self._api_url + "sendMessage",
             data=params,
