@@ -90,5 +90,5 @@ class HttpClient:
 
             return Message(text, chat_id, sender, chat_type, chat_title)
         except KeyError:
-            print(f"Message from server doesn't have an expected attribute: {response_from_server}")
+            print(f"Message from server doesn't have an expected attribute")
             return None
