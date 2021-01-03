@@ -32,7 +32,9 @@ class HttpClient:
         if response["ok"] == True and response["result"]["is_bot"] == True:
             bot_display_name = response["result"]["first_name"]
             self.bot_username = response["result"]["username"]
-            print(f"Connected to Telegram server for {bot_display_name} (@{self.bot_username}).")
+            print(
+                f"Connected to Telegram server for {bot_display_name} (@{self.bot_username})."
+            )
         else:
             raise ValueError(
                 f"Wrong API token. Please check your environment variable."
@@ -41,7 +43,10 @@ class HttpClient:
 
     def send_message(self, chat_id, text):
         params = {"chat_id": chat_id, "text": text, "parse_mode": "markdown"}
-        response = requests.post(self._api_url + "sendMessage", data=params,)
+        response = requests.post(
+            self._api_url + "sendMessage",
+            data=params,
+        )
         print(f"Sent message '{text}', response: {response}")
 
     def get_last_message(self):
@@ -71,9 +76,9 @@ class HttpClient:
                 self._next_request_offset = update["update_id"] + 1
                 return update
             else:
-                print("Request timeout or no updates since last time, try sending another request.")
-
-        return self._last_update
+                print(
+                    "Request timeout or no updates since last time, try sending another request."
+                )
 
     def _message_from_update(self, update):
         try:

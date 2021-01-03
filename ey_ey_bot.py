@@ -2,7 +2,7 @@
 
 import os
 from ey_reply import Replier
-from ey_http import HttpClient, Message
+from ey_http import HttpClient
 
 
 def main():

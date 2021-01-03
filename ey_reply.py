@@ -34,7 +34,7 @@ class Replier:
         try:
             # Disabled for now because it's getting annoying
             # TODO: re-enable once no longer crashing when receiving images
-            # self._ressurection_messenger.maybe_send(message, self._http_client) 
+            # self._ressurection_messenger.maybe_send(message, self._http_client)
             self._echoer.maybe_echo(message, self._http_client)
             self._clapbacker.maybe_clapback(message, self._http_client)
             self._ey_of_the_dayer.maybe_send(message, self._http_client)
@@ -114,4 +114,6 @@ class RessurectionMessenger:
         if not chat_id in self._chats_notified:
             http_client.send_message(chat_id, RESSURECTION_MESSAGE)
             self._chats_notified.add(chat_id)
-            print(f"Notified chat {message.chat_title} ({chat_id}) that we're back alive!")
+            print(
+                f"Notified chat {message.chat_title} ({chat_id}) that we're back alive!"
+            )
