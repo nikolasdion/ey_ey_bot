@@ -1,8 +1,8 @@
 """ Main class, point of entry to run the bot. """
 
 import os
-from ey_reply import Replier
-from ey_http import HttpClient
+from replier import Replier
+from http_client import HttpClient
 
 
 def main():
@@ -18,6 +18,7 @@ def main():
 
         reply = replier.get_reply(message)
         if reply is not None:
+            print(f"Replying {reply} to {message.text} in {message.chat_id}")
             http_client.send_message(message.chat_id, reply)
 
 

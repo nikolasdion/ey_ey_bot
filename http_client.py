@@ -12,7 +12,7 @@ class Message:
     chat_id: int
 
     @staticmethod
-    def fromServerUpdate(update: dict):
+    def from_server_update(update: dict):
         """
         Create a Message object from a server json response. Returns None if it's not a valid text
         message.
@@ -83,13 +83,13 @@ class HttpClient:
 
             update = updates[-1]
             self._next_request_offset = update["update_id"] + 1
-            message = Message.fromServerUpdate(update)
+            message = Message.from_server_update(update)
 
-            if message is not None:
-                return message
-            else:
+            if message is None:
                 print("Not a valid text message, wait for another update.")
                 continue
+
+            return message
 
     def _get_updates(self):
         params = {
@@ -97,8 +97,9 @@ class HttpClient:
             "offset": self._next_request_offset,
         }
         response = requests.get(self._api_url + "getUpdates", params).json()
+
         if "result" in response:
             return response["result"]
         else:
-            print(f"ERROR: Response doesn't contain result. Full response: {response}")
+            print(f"Response doesn't contain result. Full response: {response}")
             return None
