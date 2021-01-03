@@ -85,7 +85,7 @@ class HttpClient:
             self._next_request_offset = update["update_id"] + 1
             message = Message.fromServerUpdate(update)
 
-            if message != None:
+            if message is not None:
                 return message
             else:
                 print("Not a valid text message, wait for another update.")
