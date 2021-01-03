@@ -44,21 +44,18 @@ class HttpClient:
     def _verify_token(self):
         response = requests.get(self._api_url + "getMe").json()
         if response["ok"] and response["result"]["is_bot"]:
-            bot_display_name = response["result"]["first_name"]
             self.bot_username = response["result"]["username"]
-            print(
-                f"Connected to Telegram server for {bot_display_name} (@{self.bot_username})."
-            )
+            print(f"Token verified for @{self.bot_username}.")
         else:
             raise ValueError(
-                f"Wrong API token. Please check your environment variable."
+                f"Invalid API token. Please check your environment variable."
                 f"Response from server: {response}"
             )
 
-    def send_message(self, chat_id, text):
+    def send_message(self, message: Message):
         params = {
-            "chat_id": chat_id,
-            "text": text,
+            "chat_id": message.chat_id,
+            "text": message.text,
             "parse_mode": "markdown",
             "disable_notification": True,
         }
