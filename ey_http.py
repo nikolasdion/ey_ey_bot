@@ -11,15 +11,32 @@ class Message:
     text: str
     chat_id: int
 
+    @staticmethod
+    def fromServerUpdate(update: dict):
+        """
+        Create a Message object from a server json response. Returns None if it's not a valid text
+        message.
+        """
+        try:
+            text = update["message"]["text"]
+            chat_id = update["message"]["chat"]["id"]
+            return Message(text, chat_id)
+        except KeyError as error:
+            print(
+                f"Message from server doesn't have an expected attribute, error was: ${error}"
+            )
+            return None
+
 
 class HttpClient:
     """ Handles all http requests with the Telegram server. """
 
-    _next_request_offset = None
+    _api_url: str
+    _next_request_offset: int
+    bot_username: str
 
-    def __init__(self, token):
+    def __init__(self, token: str):
         print("Initialising http client...")
-        self._token = token
         self._api_url = f"https://api.telegram.org/bot{token}/"
         self._verify_token()
         print("Successfully initialised http client!")
@@ -51,9 +68,28 @@ class HttpClient:
         )
         print(f"Sent message '{text}', response: {response}")
 
-    def get_last_message(self):
-        last_update = self._get_last_update()
-        return self._message_from_update(last_update)
+    def get_latest_message(self):
+        print("Getting latest update...")
+
+        # Util we get an update, loop this.
+        while True:
+            updates = self._get_updates()
+
+            if updates == None or len(updates) == 0:
+                print(
+                    "Request timeout or no updates since last time, try sending another request."
+                )
+                continue
+
+            update = updates[-1]
+            self._next_request_offset = update["update_id"] + 1
+            message = Message.fromServerUpdate(update)
+
+            if message != None:
+                return message
+            else:
+                print("Not a valid text message, wait for another update.")
+                continue
 
     def _get_updates(self):
         params = {
@@ -65,31 +101,4 @@ class HttpClient:
             return response["result"]
         else:
             print(f"ERROR: Response doesn't contain result. Full response: {response}")
-            return {}
-
-    def _get_last_update(self):
-        print("Getting latest update...")
-
-        # Util we get an update, loop this.
-        while True:
-            updates = self._get_updates()
-            if len(updates) > 0:
-                update = updates[-1]
-                self._next_request_offset = update["update_id"] + 1
-                return update
-            else:
-                print(
-                    "Request timeout or no updates since last time, try sending another request."
-                )
-
-    def _message_from_update(self, update):
-        try:
-            text = update["message"]["text"]
-            chat_id = update["message"]["chat"]["id"]
-
-            return Message(text, chat_id)
-        except KeyError as error:
-            print(
-                f"Message from server doesn't have an expected attribute, error was: ${error}"
-            )
             return None
