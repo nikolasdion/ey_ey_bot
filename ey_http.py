@@ -94,7 +94,7 @@ class HttpClient:
             # Depending on the chat type, get the title is either the name of the person or the
             # group name.
             if chat_type == "private":
-                chat_title = self.sender
+                chat_title = sender
             else:
                 chat_title = update["message"]["chat"]["title"]
 
