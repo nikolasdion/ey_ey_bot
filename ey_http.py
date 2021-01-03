@@ -10,9 +10,6 @@ class Message:
 
     text: str
     chat_id: int
-    sender: str
-    chat_type: str
-    chat_title: str
 
 
 class HttpClient:
@@ -29,7 +26,7 @@ class HttpClient:
 
     def _verify_token(self):
         response = requests.get(self._api_url + "getMe").json()
-        if response["ok"] == True and response["result"]["is_bot"] == True:
+        if response["ok"] and response["result"]["is_bot"]:
             bot_display_name = response["result"]["first_name"]
             self.bot_username = response["result"]["username"]
             print(
@@ -89,16 +86,10 @@ class HttpClient:
         try:
             text = update["message"]["text"]
             chat_id = update["message"]["chat"]["id"]
-            sender = update["message"]["from"]["first_name"]
-            chat_type = update["message"]["chat"]["type"]
-            # Depending on the chat type, get the title is either the name of the person or the
-            # group name.
-            if chat_type == "private":
-                chat_title = sender
-            else:
-                chat_title = update["message"]["chat"]["title"]
 
-            return Message(text, chat_id, sender, chat_type, chat_title)
-        except KeyError:
-            print(f"Message from server doesn't have an expected attribute")
+            return Message(text, chat_id)
+        except KeyError as error:
+            print(
+                f"Message from server doesn't have an expected attribute, error was: ${error}"
+            )
             return None

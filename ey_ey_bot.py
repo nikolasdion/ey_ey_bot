@@ -16,7 +16,8 @@ def main():
         # Get latest message, this will repeat itself until a non-zero return is gotten.
         message = http_client.get_last_message()
 
-        replier.maybe_reply(message)
+        if message != None:
+            replier.maybe_reply(message)
 
 
 if __name__ == "__main__":
